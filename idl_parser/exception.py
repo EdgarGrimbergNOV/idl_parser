@@ -1,6 +1,5 @@
 
 
-
 class IDLParserException(Exception):
 
     def __init__(self, line_number=None, file_name=None, message='IDLParserException occurred.'):
@@ -16,11 +15,10 @@ class IDLParserException(Exception):
     @property
     def line_number(self):
         return self._line_number
-        
+
     @property
     def file_name(self):
         return self._file_name
-
 
 
 class InvalidIDLSyntaxError(IDLParserException):
@@ -30,8 +28,10 @@ class InvalidIDLSyntaxError(IDLParserException):
         self._className = 'InvalidIDLSyntaxError'
     pass
 
+
 class InvalidDataTypeException(IDLParserException):
     pass
+
 
 class IDLCanNotFindException(IDLParserException):
     pass

@@ -1,8 +1,7 @@
-import os, sys, traceback
+import sys
 
-from . import node
-from . import type as idl_type
-from . import exception
+from . import node, exception, type as idl_type
+
 
 class IDLMember(node.IDLNode):
     def __init__(self, parent):
@@ -31,22 +30,22 @@ class IDLMember(node.IDLNode):
                 return str(self.type) + ' ' + self.name
             elif self.type.obj.is_enum:
                 return str('enum') + ' ' + self.name
-            dic = {str(self.type) +' ' + self.name :
+            dic = {str(self.type) + ' ' + self.name:
                    self.type.obj.to_simple_dic(recursive=recursive, member_only=True)}
             return dic
-        dic = {self.name : str(self.type) }
+        dic = {self.name: str(self.type)}
         return dic
 
     def to_dic(self):
-        dic = { 'name' : self.name,
-                'filepath' : self.filepath,
-                'classname' : self.classname,
-                'type' : str(self.type) }
+        dic = {'name': self.name,
+               'filepath': self.filepath,
+               'classname': self.classname,
+               'type': str(self.type)}
         return dic
 
     @property
     def type(self):
-        if self._type.classname == 'IDLBasicType': # Struct
+        if self._type.classname == 'IDLBasicType':  # Struct
             typs = self.root_node.find_types(self._type.name)
             if len(typs) == 0:
                 print('Can not find Data Type (%s)\n' % self._type.name)
@@ -60,13 +59,11 @@ class IDLMember(node.IDLNode):
             return typs[0]
         return self._type
 
-
     def get_type(self, extract_typedef=False):
         if extract_typedef:
             if self.type.is_typedef:
                 return self.type.type
         return self.type
-
 
     def post_process(self):
         self._type._name = self.refine_typename(self.type)
@@ -76,7 +73,7 @@ class IDLStruct(node.IDLNode):
 
     def __init__(self, name, parent):
         super(IDLStruct, self).__init__('IDLStruct', name.strip(), parent)
-        self._verbose = False #True
+        self._verbose = False  # True
         self._members = []
         self.sep = '::'
 
@@ -89,38 +86,40 @@ class IDLStruct(node.IDLNode):
         if quiet:
             return 'struct %s' % name
 
-        dic = { 'struct %s' % name : [v.to_simple_dic(recursive=recursive) for v in self.members] }
+        dic = {'struct %s' % name: [v.to_simple_dic(recursive=recursive) for v in self.members]}
 
         if member_only:
             return dic.values()[0]
         return dic
 
-
     def to_dic(self):
-        dic = { 'name' : self.name,
-                'classname' : self.classname,
-                'members' : [v.to_dic() for v in self.members] }
+        dic = {'name': self.name,
+               'classname': self.classname,
+               'members': [v.to_dic() for v in self.members]}
         return dic
 
     def parse_tokens(self, token_buf, filepath=None):
         self._filepath = filepath
         ln, fn, kakko = token_buf.pop()
         if not kakko == '{':
-            if self._verbose: sys.stdout.write('# Error. No kakko "{".\n')
+            if self._verbose:
+                sys.stdout.write('# Error. No kakko "{".\n')
             raise exception.InvalidIDLSyntaxError()
 
         block_tokens = []
         while True:
 
             ln, fn, token = token_buf.pop()
-            if token == None:
-                if self._verbose: sys.stdout.write('# Error. No kokka "}".\n')
+            if token is None:
+                if self._verbose:
+                    sys.stdout.write('# Error. No kokka "}".\n')
                 raise exception.InvalidIDLSyntaxError()
 
             elif token == '}':
                 ln2, fn2, token = token_buf.pop()
                 if not token == ';':
-                    if self._verbose: sys.stdout.write('# Error. No semi-colon after "}".\n')
+                    if self._verbose:
+                        sys.stdout.write('# Error. No semi-colon after "}".\n')
                     raise exception.InvalidIDLSyntaxError(ln, fn, 'No semi-colon after "}"')
                 break
 
@@ -138,7 +137,7 @@ class IDLStruct(node.IDLNode):
         self._members.append(v)
 
     def _post_process(self):
-        self.forEachMember(lambda m : m.post_process())
+        self.forEachMember(lambda m: m.post_process())
 
     @property
     def members(self):
@@ -150,6 +149,7 @@ class IDLStruct(node.IDLNode):
                 return m
 
         return None
+
     def forEachMember(self, func):
         for m in self._members:
             func(m)

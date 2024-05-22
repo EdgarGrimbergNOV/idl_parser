@@ -54,15 +54,9 @@ class IDLNode(object):
     def classname(self):
         return self._classname
 
-
-
     @property
     def name(self):
         return self._name
-
-    @property
-    def basename(self):
-        return self._name.split(self.sep)[-1]
 
     @property
     def basename(self):
@@ -75,7 +69,6 @@ class IDLNode(object):
         if self.name.find(self.sep) > 0:
             return self.name[:self.name.rfind('::')]
         return ''
-
 
     @property
     def parent(self):
@@ -91,11 +84,12 @@ class IDLNode(object):
 
     @property
     def is_root(self):
-        return self.parent == None
+        return self.parent is None
 
     @property
     def root_node(self):
         roots = []
+
         def find_root(n):
             if n.is_root:
                 roots.append(n)
@@ -107,12 +101,12 @@ class IDLNode(object):
     def refine_typename(self, typ):
         global_module = self.root_node
         if typ.name.find('sequence') >= 0:
-            name = typ.name[typ.name.find('<')+1 : typ.name.find('>')].strip()
+            name = typ.name[typ.name.find('<')+1: typ.name.find('>')].strip()
             typs = global_module.find_types(name)
             if len(typs) == 0:
                 typ__ = typ
             else:
-                typ__  = typs[0]
+                typ__ = typs[0]
 
             return 'sequence < ' + typ__.name + ' >'
         else:

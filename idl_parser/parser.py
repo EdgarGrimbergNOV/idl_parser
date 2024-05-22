@@ -1,9 +1,8 @@
-import os, sys
+import os
+import sys
 import re
 
-from . import  module, token_buffer
-from . import type as idl_type
-from . import exception 
+from . import module, token_buffer, exception, type as idl_type
 
 
 class ConsoleTracker():
@@ -20,9 +19,12 @@ class ConsoleTracker():
 
     def deindent(self):
         self._indent = self._indent-1
-        if self._indent < 0: self._indent = 0
+        if self._indent < 0:
+            self._indent = 0
+
 
 logger = ConsoleTracker()
+
 
 class IDLParser():
 
@@ -83,7 +85,8 @@ class IDLParser():
             logger.write('  idls=%s\n' % idls)
             logger.indent()
         self.for_each_idl(self.parse_idl, except_files=except_files, idls=idls, idl_dirs=idl_dirs)
-        if self._verbose: logger.deindent()
+        if self._verbose:
+            logger.deindent()
 
     def parse_idl(self, idl_path):
         if idl_path in self._parsed_files:
@@ -91,8 +94,8 @@ class IDLParser():
                 logger.write('Parsing IDL(%s) but ALREADY PARSED.\n' % idl_path)
             return
             pass
-        if self._verbose: 
-            logger.write('Parsing IDL(%s)\n' % idl_path) #sys.stdout.write(' - Parsing IDL (%s)\n' % idl_path)
+        if self._verbose:
+            logger.write('Parsing IDL(%s)\n' % idl_path)  # sys.stdout.write(' - Parsing IDL (%s)\n' % idl_path)
             logger.indent()
         f = open(idl_path, 'r')
         lines = []
@@ -103,9 +106,9 @@ class IDLParser():
 
         self.parse_lines(lines)
 
-        if self._verbose: 
+        if self._verbose:
             logger.deindent()
-            logger.write('Parsed IDL (%s)\n' % idl_path)        
+            logger.write('Parsed IDL (%s)\n' % idl_path)
         self._parsed_files.append(idl_path)
 
     def parse_lines(self, lines, filepath=None):
@@ -120,7 +123,6 @@ class IDLParser():
         included_filepaths = []
         included_filenames = []
         f = open(idl_path, 'r')
-        lines = []
         for line in f:
             if line.find('#include') >= 0:
                 if line.find('"') >= 0:
@@ -128,6 +130,7 @@ class IDLParser():
                 elif line.find('<') >= 0:
                     file = line[line.find('<')+1:line.rfind('>')].strip()
                 included_filenames.append(file)
+
         def get_fullpath(idl_path):
             if os.path.basename(idl_path) in included_filenames:
                 included_filepaths.append(idl_path)
@@ -138,7 +141,6 @@ class IDLParser():
             raise exception.IDLCanNotFindException()
 
         return included_filepaths
-
 
     def for_each_idl(self, func, idl_dirs=[], except_files=[], idls=[], find_all=False):
         """ Parse IDLs and apply function.
@@ -155,14 +157,14 @@ class IDLParser():
         for idl_dir in idl_dirs:
             for f in os.listdir(idl_dir):
                 if f.endswith('.idl'):
-                    if not f in except_files:
+                    if f not in except_files:
                         path = os.path.join(idl_dir, f)
-                        if not f in basenames_:
-                            if not( path in idls_ ):
+                        if f not in basenames_:
+                            if not (path in idls_):
                                 idls_.append(path)
                                 basenames_.append(os.path.basename(path))
 
-        #idls_ = idls_ + idls
+        # idls_ = idls_ + idls
 
         if find_all:
             idls_ = idls_ + idls
@@ -174,12 +176,13 @@ class IDLParser():
             func(f)
 
     def _find_idl(self, filename, apply_func, idl_dirs=[]):
-        if self._verbose: 
+        if self._verbose:
             logger.write('Finding %s\n' % filename)
             logger.indent()
 
         global retval
         retval = None
+
         def func(filepath):
             if os.path.basename(filepath) == filename:
                 if self._verbose:
@@ -188,7 +191,8 @@ class IDLParser():
                 retval = apply_func(filepath)
 
         self.for_each_idl(func, idl_dirs=idl_dirs, find_all=True)
-        if self._verbose: logger.deindent()
+        if self._verbose:
+            logger.deindent()
         return retval
 
     def _paste_include(self, lines):
@@ -200,41 +204,47 @@ class IDLParser():
                     return filepath
 
                 if line.find('"') >= 7:
-                    filename = line[line.find('"')+1 : line.rfind('"')]
-                    if self._verbose: logger.write('Find Includes %s\n' % filename)
+                    filename = line[line.find('"')+1: line.rfind('"')]
+                    if self._verbose:
+                        logger.write('Find Includes %s\n' % filename)
                     p = self._find_idl(filename, _include_paste)
                     if p is None:
-                        if self._verbose:logger.write(' # IDL (%s) can not be found.\n' % filename)
+                        if self._verbose:
+                            logger.write(' # IDL (%s) can not be found.\n' % filename)
                         raise exception.IDLCanNotFindException
-                    if self._verbose: logger.write('IDL Found (%s). Parsing\n'% filename)
-                    self.parse_idl(idl_path = p)
-                    if self._verbose: logger.write('Including IDL Parsing End.\n')
+                    if self._verbose:
+                        logger.write('IDL Found (%s). Parsing\n' % filename)
+                    self.parse_idl(idl_path=p)
+                    if self._verbose:
+                        logger.write('Including IDL Parsing End.\n')
 
                     inc_lines = []
-                    f = open(p, 'r')
+                    file = open(p, 'r')
                     ln = 1
-                    for l in f:
-                        inc_lines.append((ln, p, l))
+                    for line in file:
+                        inc_lines.append((ln, p, line))
                         ln = ln + 1
                     inc_lines = self._clear_comments(inc_lines)
                     inc_lines = self._paste_include(inc_lines)
                     output_lines = output_lines + inc_lines
 
                 elif line.find('<') >= 7:
-                    filename = line[line.find('<')+1 : line.rfind('>')]
-                    if self._verbose: sys.stdout.write(' -- Includes %s\n' % filename)
+                    filename = line[line.find('<')+1: line.rfind('>')]
+                    if self._verbose:
+                        sys.stdout.write(' -- Includes %s\n' % filename)
                     p = self._find_idl(filename, _include_paste)
                     if p is None:
-                        if self._verbose:sys.stdout.write(' # IDL (%s) can not be found.\n' % filename)
+                        if self._verbose:
+                            sys.stdout.write(' # IDL (%s) can not be found.\n' % filename)
                         raise exception.IDLCanNotFindException
                     inc_lines = []
 
-                    self.parse_idl(idl_path = p)
+                    self.parse_idl(idl_path=p)
 
-                    f = open(p, 'r')
+                    file = open(p, 'r')
                     ln = 1
-                    for l in f:
-                        inc_lines.append((ln, p, l))
+                    for line in file:
+                        inc_lines.append((ln, p, line))
                         ln = ln + 1
                     inc_lines = self._clear_comments(inc_lines)
                     inc_lines = self._paste_include(inc_lines)
@@ -246,8 +256,6 @@ class IDLParser():
             output_lines.append((line_number, file_name, output_line))
 
         return output_lines
-
-
 
     def _clear_comments(self, lines):
         output_lines = []
@@ -269,7 +277,7 @@ class IDLParser():
                     continue
 
                 elif token.startswith('//'):
-                    break # ignore this line
+                    break  # ignore this line
 
                 elif token.find('/*') >= 0:
                     in_comment = True
@@ -297,6 +305,7 @@ class IDLParser():
         def_tokens = []
         global offset
         offset = 0
+
         def _parse(flag):
             global offset
             while offset < len(lines):
@@ -313,7 +322,7 @@ class IDLParser():
                 elif line.startswith('#ifndef'):
                     def_token = line.split(' ')[1]
                     offset = offset + 1
-                    _parse(not def_token in def_tokens)
+                    _parse(def_token not in def_tokens)
 
                 elif line.startswith('#endif'):
                     offset = offset + 1
@@ -326,7 +335,6 @@ class IDLParser():
 
         _parse(True)
         return output_lines
-
 
     def generate_constructor_python(self, typ):
         code = ''
