@@ -1,6 +1,6 @@
-from . import node
-from . import type as idl_type
+from . import node, type as idl_type
 sep = '::'
+
 
 class IDLTypedef(node.IDLNode):
 
@@ -19,27 +19,27 @@ class IDLTypedef(node.IDLNode):
             return 'typedef ' + name
 
         if recursive:
-            n = 'typedef ' + str(self.type) +' ' + name
+            n = 'typedef ' + str(self.type) + ' ' + name
             if not self.type.is_primitive:
-                dic = { n : (self.type.obj.to_simple_dic(recursive=recursive, member_only=True))}
+                dic = {n: (self.type.obj.to_simple_dic(recursive=recursive, member_only=True))}
             else:
-                dic = { n : str(self.type) }
+                dic = {n: str(self.type)}
             if member_only:
                 return dic
-            return {name : dic}
+            return {name: dic}
 
         dic = 'typedef %s %s' % (self.type, name)
         return dic
 
     def to_dic(self):
-        dic = { 'name' : self.name,
-                'classname' : self.classname,
-                'type' : str(self.type) }
+        dic = {'name': self.name,
+               'classname': self.classname,
+               'type': str(self.type)}
         return dic
 
     @property
     def type(self):
-        if self._type.classname == 'IDLBasicType': # Struct
+        if self._type.classname == 'IDLBasicType':  # Struct
             return self.root_node.find_types(self._type.name)[0]
         return self._type
 
@@ -48,7 +48,6 @@ class IDLTypedef(node.IDLNode):
             if self.type.is_typedef:
                 return self.type.type
         return self.type
-
 
     def parse_blocks(self, blocks, filepath=None):
         self._filepath = filepath
@@ -62,7 +61,7 @@ class IDLTypedef(node.IDLNode):
             if name.find('[') > 0:
                 type_name_ = name[name.find('['):]
                 name = name[:name.find('[')]
-                #rindex = rindex + 1
+                # rindex = rindex + 1
                 break
 
             type_name_ = name + type_name_

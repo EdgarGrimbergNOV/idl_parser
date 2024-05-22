@@ -1,8 +1,7 @@
-import os, sys, traceback
+import sys
 
-from . import node
-from . import type as idl_type
-from . import exception
+from . import node, exception, type as idl_type
+
 
 class IDLUnionMember(node.IDLNode):
     def __init__(self, parent):
@@ -27,7 +26,8 @@ class IDLUnionMember(node.IDLNode):
             self._descriminator_value_associations.append(token)
             token = blocks.pop(0)
             if token != ':':
-                if self._verbose: sys.stdout.write('# Error. No ":" after case value.\n')
+                if self._verbose:
+                    sys.stdout.write('# Error. No ":" after case value.\n')
                 raise exception.InvalidDataTypeException()
 
         name, typ = self._name_and_type(blocks)
@@ -44,27 +44,27 @@ class IDLUnionMember(node.IDLNode):
                 return str(self.type) + ' ' + self.name
             elif self.type.obj.is_enum:
                 return str('enum') + ' ' + self.name
-            dic = {str(self.type) +' ' + self.name :
+            dic = {str(self.type) + ' ' + self.name:
                    self.type.obj.to_simple_dic(recursive=recursive, member_only=True)}
             return dic
-        dic = {self.name : str(self.type) }
+        dic = {self.name: str(self.type)}
         return dic
 
     def to_dic(self):
-        dic = { 'name' : self.name,
-                'descriminator_value_associations' : self.descriminator_value_associations,
-                'filepath' : self.filepath,
-                'classname' : self.classname,
-                'type' : self.type.name }
+        dic = {'name': self.name,
+               'descriminator_value_associations': self.descriminator_value_associations,
+               'filepath': self.filepath,
+               'classname': self.classname,
+               'type': self.type.name}
         return dic
 
     @property
     def type(self):
-        if self._type.classname == 'IDLBasicType': # Union
+        if self._type.classname == 'IDLBasicType':  # Union
             typs = self.root_node.find_types(self._type.name)
             if len(typs) == 0:
                 print('Can not find Data Type (%s)\n' % self._type.name)
-                raise InvalidDataTypeException()
+                raise exception.InvalidDataTypeException()
             return typs[0]
         return self._type
 
@@ -80,6 +80,7 @@ class IDLUnionMember(node.IDLNode):
 
     def post_process(self):
         self._type._name = self.refine_typename(self.type)
+
 
 class IDLUnion(node.IDLNode):
 
@@ -99,17 +100,17 @@ class IDLUnion(node.IDLNode):
         if quiet:
             return 'union %s' % name
 
-        dic = { 'union %s' % name : [v.to_simple_dic(recursive=recursive) for v in self.members] }
+        dic = {'union %s' % name: [v.to_simple_dic(recursive=recursive) for v in self.members]}
 
         if member_only:
             return dic.values()[0]
         return dic
 
     def to_dic(self):
-        dic = { 'name' : self.name,
-                'classname' : self.classname,
-                'descriminator_kind' : self.descriminator_kind,
-                'members' : [v.to_dic() for v in self.members] }
+        dic = {'name': self.name,
+               'classname': self.classname,
+               'descriminator_kind': self.descriminator_kind,
+               'members': [v.to_dic() for v in self.members]}
         return dic
 
     def parse_tokens(self, token_buf, filepath=None):
@@ -119,22 +120,25 @@ class IDLUnion(node.IDLNode):
 
         ln, fn, token = token_buf.pop()
         if token != '{':
-            if self._verbose: sys.stdout.write('# Error. No kokka "{".\n')
-            raise InvalidIDLSyntaxError()
+            if self._verbose:
+                sys.stdout.write('# Error. No kokka "{".\n')
+            raise exception.InvalidIDLSyntaxError()
 
         block_tokens = []
         while True:
 
             ln, fn, token = token_buf.pop()
-            if token == None:
-                if self._verbose: sys.stdout.write('# Error. No kokka "}".\n')
-                raise InvalidIDLSyntaxError()
+            if token is None:
+                if self._verbose:
+                    sys.stdout.write('# Error. No kokka "}".\n')
+                raise exception.InvalidIDLSyntaxError()
 
             elif token == '}':
                 ln, fn, token = token_buf.pop()
                 if not token == ';':
-                    if self._verbose: sys.stdout.write('# Error. No semi-colon after "}".\n')
-                    raise InvalidIDLSyntaxError()
+                    if self._verbose:
+                        sys.stdout.write('# Error. No semi-colon after "}".\n')
+                    raise exception.InvalidIDLSyntaxError()
                 break
 
             if token == ';':
@@ -148,18 +152,21 @@ class IDLUnion(node.IDLNode):
     def parse_descriminator_kind(self, token_buf):
         ln, fn, token = token_buf.pop()
         if token != 'switch':
-            if self._verbose: sys.stdout.write('# Error. Union definition missing "switch".\n')
-            raise InvalidIDLSyntaxError()
+            if self._verbose:
+                sys.stdout.write('# Error. Union definition missing "switch".\n')
+            raise exception.InvalidIDLSyntaxError()
         ln, fn, token = token_buf.pop()
         if token != '(':
-            if self._verbose: sys.stdout.write('# Error. No "(".\n')
-            raise InvalidIDLSyntaxError()
+            if self._verbose:
+                sys.stdout.write('# Error. No "(".\n')
+            raise exception.InvalidIDLSyntaxError()
         ln, fn, token = token_buf.pop()
         self._descriminator_kind = token
         ln, fn, token = token_buf.pop()
         if token != ')':
-            if self._verbose: sys.stdout.write('# Error. No ")".\n')
-            raise InvalidIDLSyntaxError()
+            if self._verbose:
+                sys.stdout.write('# Error. No ")".\n')
+            raise exception.InvalidIDLSyntaxError()
 
     def _parse_block(self, blocks):
         v = IDLUnionMember(self)
@@ -167,7 +174,7 @@ class IDLUnion(node.IDLNode):
         self._members.append(v)
 
     def _post_process(self):
-        self.forEachMember(lambda m : m.post_process())
+        self.forEachMember(lambda m: m.post_process())
 
     @property
     def members(self):
@@ -183,6 +190,7 @@ class IDLUnion(node.IDLNode):
                 return m
 
         return None
+
     def forEachMember(self, func):
         for m in self._members:
             func(m)

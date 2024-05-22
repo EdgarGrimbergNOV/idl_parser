@@ -1,7 +1,2 @@
-#from parser import IDLParser
-__all__=['parser', 'exception']
-
-
-
-    
-    
+# from parser import IDLParser
+__all__ = ['parser', 'exception']

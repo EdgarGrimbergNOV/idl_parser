@@ -1,7 +1,8 @@
-import os, sys, traceback
+import sys
 
-from . import node
+from . import node, exception
 sep = '::'
+
 
 class IDLEnumValue(node.IDLNode):
     def __init__(self, value, parent):
@@ -15,29 +16,28 @@ class IDLEnumValue(node.IDLNode):
             self._name = blocks[0]
         else:
             sys.stdout.write('Unkown Enum format %s\n' % blocks)
-        #name, type = self._name_and_type(blocks)
-        #self._name = name
-        #self._type = type
+        # name, type = self._name_and_type(blocks)
+        # self._name = name
+        # self._type = type
 
     @property
     def full_path(self):
         return self.full_path + '.' + self.name
 
     def to_simple_dic(self):
-        dic = {self.name : self.value }
+        dic = {self.name: self.value}
         return dic
 
     def to_dic(self):
-        dic = { 'name' : self.name,
-                'filepath' : self.filepath,
-                'classname' : self.classname,
-                'value' : self.value }
+        dic = {'name': self.name,
+               'filepath': self.filepath,
+               'classname': self.classname,
+               'value': self.value}
         return dic
+
     @property
     def value(self):
         return self._value
-
-
 
 
 class IDLEnum(node.IDLNode):
@@ -51,14 +51,13 @@ class IDLEnum(node.IDLNode):
         name = self.full_path if full_path else self.name
         if quiet:
             return 'enum %s' % name
-        dic = { 'enum %s' % name : [v.to_simple_dic() for v in self.values] }
+        dic = {'enum %s' % name: [v.to_simple_dic() for v in self.values]}
         return dic
 
-
     def to_dic(self):
-        dic = { 'name' : self.name,
-                'classname' : self.classname,
-                'values' : [v.to_dic() for v in self.values] }
+        dic = {'name': self.name,
+               'classname': self.classname,
+               'values': [v.to_dic() for v in self.values]}
         return dic
 
     @property
@@ -70,21 +69,24 @@ class IDLEnum(node.IDLNode):
         self._counter = 0
         ln, fn, kakko = token_buf.pop()
         if not kakko == '{':
-            if self._verbose: sys.stdout.write('# Error. No kakko "{".\n')
-            raise InvalidIDLSyntaxError()
+            if self._verbose:
+                sys.stdout.write('# Error. No kakko "{".\n')
+            raise exception.InvalidIDLSyntaxError()
 
         block_tokens = []
         while True:
             ln, fn, token = token_buf.pop()
-            if token == None:
-                if self._verbose: sys.stdout.write('# Error. No kokka "}".\n')
-                raise InvalidIDLSyntaxError()
+            if token is None:
+                if self._verbose:
+                    sys.stdout.write('# Error. No kokka "}".\n')
+                raise exception.InvalidIDLSyntaxError()
 
             elif token == '}':
                 ln, fn, token = token_buf.pop()
                 if not token == ';':
-                    if self._verbose: sys.stdout.write('# Error. No semi-colon after "}".\n')
-                    raise InvalidIDLSyntaxError()
+                    if self._verbose:
+                        sys.stdout.write('# Error. No semi-colon after "}".\n')
+                    raise exception.InvalidIDLSyntaxError()
 
                 if len(block_tokens) > 0:
                     self._parse_block(block_tokens)
@@ -98,14 +100,13 @@ class IDLEnum(node.IDLNode):
 
     def _parse_block(self, blocks):
         v = IDLEnumValue(self._counter, self)
-        self._counter = self._counter+ 1
+        self._counter = self._counter + 1
         v.parse_blocks(blocks, self.filepath)
         self._values.append(v)
 
     @property
     def values(self):
         return self._values
-
 
     def value_by_name(self, name):
         for m in self.values:

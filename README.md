@@ -5,7 +5,7 @@
 
 ## Description 
 
-OMG IDL file parser. This library just parse IDL files, and output intermidiate type objects.
+IDL file parser. This library just parse IDL files, and output intermidiate type objects.
 
 ## Example
 ```
