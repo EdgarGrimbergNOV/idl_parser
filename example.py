@@ -10,8 +10,9 @@ def test():
 module my_module {
   struct Time {
     long sec;
-    long usec;
-  };
+    long usec; //@optional
+    long nsec;	//@optional
+    };
 
   enum UNION_DESCRIMINATOR_KIND
   {
@@ -40,8 +41,8 @@ module my_module {
   typedef sequence<double> DoubleSeq;
 
   struct TimedDoubleSeq {
-    Time tm; //@optional
-    DoubleSeq data;
+    Time tm;
+    DoubleSeq data; // Regular comment
   };
 
   enum RETURN_VALUE {
@@ -82,12 +83,21 @@ module my_module {
         for a in m.descriminator_value_associations:
             print('    %s' % a)
 
+    time = my_module.struct_by_name('Time')
+    print('Time')
+    for m in time.members:
+        print('- member:')
+        print('  name:', m.name)
+        print('  type:', m.type.name)
+        print('  annotation:', m.annotation)
+
     timedDoubleSeq = my_module.struct_by_name('TimedDoubleSeq')
     print('TimedDoubleSeq')
     for m in timedDoubleSeq.members:
         print('- member:')
         print('  name:', m.name)
         print('  type:', m.type.name)
+        print('  annotation:', m.annotation)
 
 
 if __name__ == '__main__':

@@ -82,6 +82,20 @@ class IDLNode(object):
         type = type.strip()
         return (name, type)
 
+    def _name_type_and_annotation(self, blocks):
+        has_annotation = "//@" in blocks[-1]
+        if not has_annotation:
+            (name, type) = self._name_and_type(blocks)
+            return (name, type, None)
+
+        name = blocks[-2]
+        type = ''
+        for t in blocks[:-2]:
+            type = type + ' ' + t
+        type = type.strip()
+        annotation = blocks[-1]
+        return (name, type, annotation)
+
     @property
     def is_root(self):
         return self.parent is None

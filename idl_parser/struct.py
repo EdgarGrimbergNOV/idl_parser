@@ -1,6 +1,6 @@
 import sys
 
-from . import node, exception, type as idl_type
+from . import node, exception, type as idl_type, annotation as idl_anotation
 
 
 class IDLMember(node.IDLNode):
@@ -16,13 +16,17 @@ class IDLMember(node.IDLNode):
 
     def parse_blocks(self, blocks, filepath=None):
         self._filepath = filepath
-        name, typ = self._name_and_type(blocks)
+        name, typ, annotation = self._name_type_and_annotation(blocks)
         if name.find('[') >= 0:
             name_ = name[:name.find('[')]
             typ = typ.strip() + ' ' + name[name.find('['):]
             name = name_
         self._name = name
         self._type = idl_type.IDLType(typ, self)
+        if annotation is not None:
+            self._annotation = idl_anotation.IDLAnnotation(annotation, self)
+        else:
+            self._annotation = None
 
     def to_simple_dic(self, recursive=False, member_only=False):
         if recursive:
@@ -64,6 +68,12 @@ class IDLMember(node.IDLNode):
             if self.type.is_typedef:
                 return self.type.type
         return self.type
+
+    @property
+    def annotation(self):
+        if self._annotation is None:
+            return None
+        return self._annotation.annotation
 
     def post_process(self):
         self._type._name = self.refine_typename(self.type)
@@ -110,6 +120,7 @@ class IDLStruct(node.IDLNode):
         while True:
 
             ln, fn, token = token_buf.pop()
+            _, _, next_token = token_buf.peek()
             if token is None:
                 if self._verbose:
                     sys.stdout.write('# Error. No kokka "}".\n')
@@ -123,10 +134,18 @@ class IDLStruct(node.IDLNode):
                     raise exception.InvalidIDLSyntaxError(ln, fn, 'No semi-colon after "}"')
                 break
 
-            if token == ';':
+            if token == ';' and "//@" not in next_token:
                 self._parse_block(block_tokens)
                 block_tokens = []
                 continue
+
+            elif token == ';' and "//@" in next_token:
+                _, _, token = token_buf.pop()
+                block_tokens.append(token)
+                self._parse_block(block_tokens)
+                block_tokens = []
+                continue
+
             block_tokens.append(token)
 
         self._post_process()

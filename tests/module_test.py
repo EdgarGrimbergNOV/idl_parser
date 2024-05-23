@@ -283,6 +283,29 @@ class BasicTestFunctions(unittest.TestCase):
             m = another_struct.member_by_name('another_struct_seq2')
             self.assertEqual(m.type.inner_type.name, 'long')
 
+    def test_annotation(self):
+        parser_ = parser.IDLParser()
+        with open(idl_path, 'r') as idlf:
+            m = parser_.load(idlf.read())
+            my_module = m.modules[1]
+            self.assertEqual(my_module.name, 'my_module')
+            annotation_struct = my_module.struct_by_name('test_annotation')
+            no_member = annotation_struct.member_by_name('no_annotation_type')
+            self.assertEqual(no_member.type.name, 'double')
+            self.assertEqual(no_member.annotation, None)
+            optional_member = annotation_struct.member_by_name('optional_annotation')
+            self.assertEqual(optional_member.type.name, 'long')
+            self.assertEqual(optional_member.annotation, 'optional')
+            key_member = annotation_struct.member_by_name('key_annotation_with_weird_spacing')
+            self.assertEqual(key_member.type.name, 'char')
+            self.assertEqual(key_member.annotation, 'key')
+            for_member = annotation_struct.member_by_name('for_annotation_with_tabbed_spacing')
+            self.assertEqual(for_member.type.name, 'short')
+            self.assertEqual(for_member.annotation, 'for')
+            typed_member = annotation_struct.member_by_name('typed_annotation_with_multiword_type')
+            self.assertEqual(typed_member.type.name, 'const unsigned long long int')
+            self.assertEqual(typed_member.annotation, 'typed')
+
 
 if __name__ == '__main__':
     unittest.main()
