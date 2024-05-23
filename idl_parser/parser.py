@@ -264,10 +264,11 @@ class IDLParser():
         for line_number, file_name, line in lines:
             line = line.strip()
             output_line = ''
-            if line.find('//') >= 0:
-                line = line[:line.find('//')]
+            annotation_idx = line.find('//@') + 3
+            if line.find('//', annotation_idx) >= 0:
+                line = line[:line.find('//', annotation_idx)]
 
-            for token in line.split(' '):
+            for token in re.split(r'\s+', line):
 
                 if in_comment and token.find('*/') >= 0:
                     in_comment = False
@@ -276,7 +277,7 @@ class IDLParser():
                 elif in_comment:
                     continue
 
-                elif token.startswith('//'):
+                elif token.startswith('//') and not token.startswith('//@'):
                     break  # ignore this line
 
                 elif token.find('/*') >= 0:

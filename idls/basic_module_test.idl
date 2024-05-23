@@ -96,6 +96,13 @@ module my_module {
       > another_struct_seq2;
   };
 
+  struct test_annotation {
+    double no_annotation_type;
+    long optional_annotation; //@optional
+    char key_annotation_with_weird_spacing;   //@key
+    short for_annotation_with_tabbed_spacing;						//@for
+    const unsigned long long int typed_annotation_with_multiword_type; //@typed
+  };
 };
 
 module lase_module {

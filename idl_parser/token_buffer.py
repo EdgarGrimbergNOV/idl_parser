@@ -21,3 +21,9 @@ class TokenBuffer():
         t = self._tokens[self._token_offset]  # .strip()
         self._token_offset = self._token_offset + 1
         return t
+
+    def peek(self):
+        if len(self._tokens) == self._token_offset:
+            return (-1, '', None)
+        t = self._tokens[self._token_offset]
+        return t
