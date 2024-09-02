@@ -4,13 +4,13 @@ long_description = open('README.rst', 'r').read()
 
 
 setup(name='idl_parser',
-      version='0.0.16',
+      version='0.0.17',
       url='http://www.sugarsweetrobotics.com/',
       author='ysuga',
       author_email='ysuga@ysuga.net',
       description='Very simple IDL (Interface Definition Language) parser. This parses IDL files and outputs intermediate class objects.',
       long_description=long_description,
-      download_url='https://github.com/sugarsweetrobotics/idl_parser',
+      download_url='https://github.com/EdgarGrimbergNOV/idl_parser/',
       packages=["idl_parser"],
       # py_modules = ["pepper_kinematics"],
       license='GPLv3',
